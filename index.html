@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rick & Morty // Interdimensional HQ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;
+  font-family:Arial,Helvetica,sans-serif;
+  color:#fff;
+  background:#06100b;
+  overflow-x:hidden;
+}
+button{font:inherit}
+
+body::before{
+  content:"";
+  position:fixed;inset:0;z-index:-3;
+  background:
+    linear-gradient(rgba(2,9,6,.28),rgba(2,9,6,.58)),
+    url("lab-background.jpg") center/cover no-repeat;
+}
+body::after{
+  content:"";
+  position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 40%,rgba(76,255,151,.10),transparent 35%),
+    linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.55));
+}
+
+.room{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px 16px;
+}
+.panel{
+  width:min(1050px,100%);
+  padding:34px;
+  border:1px solid rgba(100,255,165,.45);
+  border-radius:24px;
+  background:rgba(3,11,8,.74);
+  backdrop-filter:blur(9px);
+  box-shadow:0 0 50px rgba(50,255,140,.13);
+}
+.topline{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:15px;margin-bottom:28px;
+  color:#8effba;font-size:11px;letter-spacing:3px;
+}
+.status{
+  padding:8px 12px;border:1px solid #6dffa4;border-radius:999px;
+  background:rgba(60,255,145,.06);
+}
+h1{
+  font-size:clamp(48px,10vw,105px);
+  line-height:.83;letter-spacing:-6px;
+  text-shadow:0 0 15px rgba(90,255,160,.85),0 0 45px rgba(90,255,160,.28);
+}
+.subtitle{
+  max-width:680px;margin:22px 0 32px;
+  color:#c2d1c8;line-height:1.65;
+}
+.menu{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:15px;
+}
+.menu button{
+  min-height:110px;padding:20px;text-align:left;
+  border:1px solid rgba(105,255,165,.35);border-radius:16px;
+  color:#fff;background:rgba(2,12,8,.76);
+  cursor:pointer;transition:.25s;
+}
+.menu button:hover{
+  transform:translateY(-6px);
+  border-color:#72ffab;
+  box-shadow:0 0 28px rgba(80,255,150,.2);
+}
+.menu strong{display:block;color:#72ffab;font-size:18px;margin-bottom:8px}
+.menu span{color:#8fa49a;font-size:12px;line-height:1.5}
+
+.room-screen{
+  display:none;min-height:100vh;padding:28px 16px 60px;
+  background:rgba(2,8,6,.95);
+}
+.room-screen.active{display:block}
+.inner{width:min(1100px,100%);margin:auto}
+.back{
+  padding:10px 15px;margin-bottom:28px;
+  border:1px solid #67ffa1;border-radius:9px;
+  color:#75ffad;background:rgba(30,255,130,.06);
+  cursor:pointer;
+}
+.section-title{
+  font-size:clamp(38px,7vw,72px);
+  line-height:.9;margin-bottom:12px;
+}
+.section-copy{
+  max-width:720px;margin-bottom:35px;
+  color:#93a79e;line-height:1.65;
+}
+
+/* Character room */
+.character-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.character{
+  min-height:180px;padding:23px;text-align:left;
+  color:#fff;background:rgba(10,20,16,.9);
+  border:1px solid rgba(255,255,255,.12);border-radius:17px;
+  cursor:pointer;transition:.25s;
+}
+.character:hover{transform:translateY(-5px);border-color:#70ffab}
+.character .emoji{font-size:38px;margin-bottom:13px}
+.character h3{margin-bottom:8px}
+.character p{font-size:12px;color:#82968c;line-height:1.55}
+
+/* Lab room */
+#labRoom{
+  position:relative;
+  background:
+    linear-gradient(rgba(2,8,6,.22),rgba(2,8,6,.55)),
+    url("lab-background.jpg") center/cover fixed no-repeat;
+}
+.lab-overlay{
+  min-height:calc(100vh - 56px);
+  padding:24px 0;
+}
+.lab-panel{
+  width:min(1050px,100%);
+  margin:auto;
+  padding:28px;
+  border:1px solid rgba(100,255,165,.45);
+  border-radius:22px;
+  background:rgba(4,12,9,.72);
+  backdrop-filter:blur(8px);
+  box-shadow:0 0 45px rgba(50,255,140,.15);
+}
+.lab-buttons{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:28px;
+}
+.lab-button{
+  min-height:150px;padding:24px;text-align:left;
+  border:1px solid rgba(100,255,165,.35);border-radius:18px;
+  color:#fff;background:rgba(2,12,8,.78);
+  cursor:pointer;transition:.25s;
+}
+.lab-button:hover{
+  transform:translateY(-7px);
+  border-color:#70ffab;
+  box-shadow:0 0 32px rgba(80,255,150,.2);
+}
+.lab-button .big-icon{font-size:42px;margin-bottom:16px}
+.lab-button strong{display:block;color:#75ffad;font-size:20px;margin-bottom:8px}
+.lab-button span{display:block;color:#8fa49a;font-size:12px;line-height:1.6}
+
+/* Dimension travel modal */
+.modal-backdrop{
+  display:none;position:fixed;inset:0;z-index:80;
+  background:rgba(0,0,0,.75);
+  align-items:center;justify-content:center;padding:18px;
+}
+.modal-backdrop.show{display:flex}
+.modal{
+  width:min(650px,100%);max-height:88vh;overflow:auto;
+  padding:28px;border:1px solid #70ffab;border-radius:20px;
+  background:#07110d;
+  box-shadow:0 0 55px rgba(80,255,150,.22);
+}
+.tag{color:#70ffab;font-size:10px;letter-spacing:3px;margin-bottom:12px}
+.modal h2{margin-bottom:14px}
+.modal p,.modal li{color:#b5c5bc;line-height:1.7}
+.modal ol{padding-left:22px;margin-top:15px}
+.close{
+  margin-top:22px;padding:10px 16px;border:0;border-radius:8px;
+  background:#70ffab;color:#06100b;font-weight:800;cursor:pointer;
+}
+
+/* Phone */
+.phone-wrap{display:flex;justify-content:center}
+.phone{
+  width:min(360px,94vw);height:min(650px,78vh);
+  min-height:520px;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  border:6px solid #202622;border-radius:35px;
+  background:#101613;
+  box-shadow:0 0 45px rgba(0,0,0,.65),0 0 35px rgba(80,255,150,.13);
+}
+.phone-top{
+  padding:13px 17px;background:#1a211d;
+  display:flex;justify-content:space-between;align-items:center;
+  color:#b8c7be;font-size:11px;
+}
+.phone-title{padding:15px 17px;background:#17201a;border-bottom:1px solid #2b382f}
+.phone-title strong{font-size:17px}
+.phone-title span{display:block;margin-top:4px;color:#70ffab;font-size:10px}
+.contacts{display:flex;flex-direction:column;gap:2px;padding:10px;background:#0c110e;overflow:auto}
+.contact{
+  display:flex;align-items:center;gap:12px;
+  width:100%;padding:12px;text-align:left;
+  border:0;border-radius:12px;color:#fff;background:#121914;cursor:pointer;
+}
+.contact:hover{background:#1a251e}
+.avatar{
+  width:42px;height:42px;display:grid;place-items:center;
+  flex:none;border-radius:50%;background:#27352c;font-size:21px;
+}
+.contact-info strong{display:block;font-size:13px}
+.contact-info span{display:block;margin-top:3px;color:#718178;font-size:10px}
+.chat{
+  display:none;flex:1;flex-direction:column;min-height:0;background:#0b100d;
+}
+.chat.show{display:flex}
+.chat-head{
+  display:flex;align-items:center;gap:10px;padding:12px;
+  background:#17201a;border-bottom:1px solid #29362e;
+}
+.chat-back{
+  border:0;background:transparent;color:#70ffab;font-size:20px;cursor:pointer;
+}
+.messages{flex:1;overflow:auto;padding:16px}
+.msg{
+  max-width:84%;padding:10px 12px;margin-bottom:10px;
+  border-radius:13px;font-size:12px;line-height:1.5;
+}
+.msg.them{background:#1a251e;color:#d1ddd6;border-bottom-left-radius:4px}
+.msg.you{
+  margin-left:auto;background:#55d889;color:#06100b;
+  border-bottom-right-radius:4px;
+}
+.chat-input{
+  display:flex;gap:7px;padding:10px;border-top:1px solid #29362e;
+}
+.chat-input input{
+  min-width:0;flex:1;padding:11px 12px;
+  border:1px solid #34443a;border-radius:10px;
+  outline:none;background:#121914;color:#fff;
+}
+.chat-input button{
+  padding:0 13px;border:0;border-radius:10px;
+  background:#70ffab;color:#06100b;font-weight:800;cursor:pointer;
+}
+
+/* Generic modal */
+.fact-card{margin-top:12px}
+@media(max-width:760px){
+  .panel{padding:25px}
+  .menu,.lab-buttons{grid-template-columns:1fr}
+  .character-grid{grid-template-columns:1fr}
+  .topline{flex-direction:column;align-items:flex-start}
+  .lab-panel{padding:22px}
+}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<main class="room" id="homeRoom">
+  <section class="panel">
+    <div class="topline">
+      <div>INTERDIMENSIONAL HQ // C-137</div>
+      <div class="status">● SYSTEM ONLINE</div>
+    </div>
+
+    <h1>RICK<br>&amp; MORTY</h1>
+
+    <p class="subtitle">
+      Welcome to the lab. Pick a terminal to explore the character
+      database, discover random facts, or teleport into Rick's lab.
+    </p>
+
+    <div class="menu">
+      <button onclick="openRoom('charactersRoom')">
+        <strong>01 // CHARACTERS</strong>
+        <span>Enter the character database and inspect individual subjects.</span>
+      </button>
+
+      <button onclick="openFact()">
+        <strong>02 // RANDOM FACTS</strong>
+        <span>Generate a random Rick &amp; Morty fact in a pop-up.</span>
+      </button>
+
+      <button onclick="openRoom('labRoom')">
+        <strong>03 // LAB</strong>
+        <span>Teleport to Rick's laboratory and access its two terminals.</span>
+      </button>
+    </div>
+  </section>
+</main>
+
+<!-- CHARACTER ROOM -->
+<section class="room-screen" id="charactersRoom">
+  <div class="inner">
+    <button class="back" onclick="goHome()">← BACK TO HQ</button>
+    <h2 class="section-title">CHARACTER<br>DATABASE</h2>
+    <p class="section-copy">
+      Click any subject to open its information card.
+      Fifteen characters are loaded into the database.
+    </p>
+    <div class="character-grid" id="characterGrid"></div>
+  </div>
+</section>
+
+<!-- RICK'S LAB ROOM -->
+<section class="room-screen" id="labRoom">
+  <div class="lab-overlay">
+    <div class="inner">
+      <button class="back" onclick="goHome()">← TELEPORT BACK TO HQ</button>
+
+      <div class="lab-panel">
+        <div class="topline">
+          <div>RICK'S LAB // RESTRICTED AREA</div>
+          <div class="status">● PORTAL CORE ONLINE</div>
+        </div>
+
+        <h2 class="section-title">RICK'S<br>LAB</h2>
+        <p class="section-copy">
+          You made it into the lab. Two terminals are available.
+          One explains the fictional mechanics behind dimensional travel,
+          while the other opens an interdimensional messenger phone.
+        </p>
+
+        <div class="lab-buttons">
+          <button class="lab-button" onclick="openTravel()">
+            <div class="big-icon">🌀</div>
+            <strong>HOW DIMENSIONAL TRAVEL WORKS</strong>
+            <span>Open a simplified explanation of the portal technology used for this fictional universe.</span>
+          </button>
+
+          <button class="lab-button" onclick="openPhone()">
+            <div class="big-icon">📱</div>
+            <strong>INTERDIMENSIONAL PHONE</strong>
+            <span>Open a mini messenger and chat with familiar characters.</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GENERAL MODAL -->
+<div class="modal-backdrop" id="infoModal">
+  <div class="modal">
+    <div class="tag" id="infoTag">LAB TERMINAL</div>
+    <h2 id="infoTitle"></h2>
+    <div id="infoBody"></div>
+    <button class="close" onclick="closeInfo()">CLOSE</button>
+  </div>
+</div>
+
+<!-- PHONE MODAL -->
+<div class="modal-backdrop" id="phoneModal">
+  <div class="phone-wrap">
+    <div class="phone">
+
+      <div class="phone-top">
+        <span>9:41</span>
+        <span>▮▮▮  Wi-Fi  ◉</span>
+      </div>
+
+      <div class="phone-title">
+        <strong>Portal Messenger</strong>
+        <span>INTERDIMENSIONAL NETWORK</span>
+      </div>
+
+      <div class="contacts" id="contacts"></div>
+
+      <div class="chat" id="chat">
+        <div class="chat-head">
+          <button class="chat-back" onclick="showContacts()">‹</button>
+          <div class="avatar" id="chatAvatar">👽</div>
+          <div>
+            <strong id="chatName">Contact</strong>
+            <div style="color:#70ffab;font-size:10px">● ONLINE</div>
+          </div>
+        </div>
+
+        <div class="messages" id="messages"></div>
+
+        <div class="chat-input">
+          <input id="messageInput" placeholder="Type a message..." maxlength="120">
+          <button onclick="sendMessage()">SEND</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const facts = [
+  "Rick's portal technology is one of the key ways the series explores different realities.",
+  "Morty is frequently pulled into adventures that are far bigger than he expected.",
+  "The Smith family lives in a suburban home that becomes the starting point for many adventures.",
+  "Portal travel is a major part of the show's science-fiction premise.",
+  "Rick is portrayed as an extremely intelligent but deeply complicated scientist.",
+  "Morty often acts as the more cautious voice during dangerous adventures.",
+  "The show mixes science fiction with comedy, family drama, and absurd situations.",
+  "Different dimensions can have very different versions of familiar characters.",
+  "The garage is one of the most recognizable locations connected to Rick's inventions.",
+  "Rick's inventions often turn ordinary household objects into unusual pieces of technology.",
+  "The multiverse concept lets the story explore alternate versions of reality.",
+  "Summer is Morty's older sister and often becomes involved in Rick's adventures.",
+  "Beth is Rick's daughter and Morty's mother.",
+  "Jerry is Morty's father and Beth's husband.",
+  "The family frequently has to deal with the consequences of Rick's experiments.",
+  "Interdimensional travel is treated as both useful technology and a source of chaos.",
+  "Rick often uses scientific knowledge to solve problems in unconventional ways.",
+  "Morty has become more capable and independent as the adventures continue.",
+  "The series often uses fictional science concepts to create unusual story situations.",
+  "The portal gun is one of the most recognizable pieces of technology associated with Rick.",
+  "The Smith household includes Beth, Jerry, Summer, Morty, and Rick.",
+  "Rick's garage functions as a workshop for many of his inventions.",
+  "The show frequently changes locations instead of staying in one world.",
+  "Alternate realities are sometimes used to explore what-if versions of characters.",
+  "The series combines an ordinary family setting with extremely unusual science-fiction events.",
+  "Rick's scientific experiments often have unexpected consequences.",
+  "Summer is portrayed as resourceful and willing to take part in dangerous adventures.",
+  "Beth is a skilled veterinarian and has a strong personality.",
+  "Jerry is often portrayed as less confident than the other members of the family.",
+  "Morty's adventures with Rick can force him to make difficult decisions.",
+  "The series uses dimensional travel as a way to create stories that could not happen in a single reality.",
+  "The garage has become a visual symbol of Rick's experimental side.",
+  "The family relationship is an important part of the story even when the plot becomes extremely strange.",
+  "Rick and Morty frequently encounter aliens, robots, monsters, and other strange beings.",
+  "The central idea of exploring an enormous multiverse allows the story to keep introducing new possibilities."
+];
+
+const characters = [
+  ["🧪","Rick Sanchez","A brilliant, unpredictable scientist who creates advanced inventions and explores the multiverse."],
+  ["👦","Morty Smith","Rick's grandson who is regularly pulled into interdimensional adventures."],
+  ["👩","Beth Smith","Rick's daughter and Morty's mother, a talented veterinarian with a strong personality."],
+  ["👨","Jerry Smith","Morty's father and Beth's husband, often caught up in the family's strange adventures."],
+  ["👧","Summer Smith","Morty's older sister who becomes increasingly involved in Rick's adventures."],
+  ["🤖","Mr. Meeseeks","A blue, helpful creature created to complete a specific task."],
+  ["🧑‍⚕️","Dr. Wong","A professional therapist who works with the Smith family."],
+  ["👽","Birdperson","Rick's longtime friend and an important figure from his past."],
+  ["🧑‍🚀","Space Beth","An alternate version of Beth who becomes involved in space adventures."],
+  ["👽","Squanchy","A strange alien and one of Rick's old friends."],
+  ["🦎","Mr. Poopybutthole","A recurring character connected to the Smith family's unusual adventures."],
+  ["🐱","Snowball","The family dog whose story becomes connected to advanced technology."],
+  ["👾","Unity","A powerful collective intelligence that Rick has a complicated history with."],
+  ["🤖","Krombopulos Michael","An alien assassin who is enthusiastic about his work."],
+  ["👽","Scary Terry","A dream-world character who becomes part of one of Morty's adventures."]
+];
+
+const contacts = [
+  ["🧪","Rick","Busy. Probably doing science.","Morty! If this is about homework, don't call me."],
+  ["👦","Morty","Online","Uh, hey! What's up?"],
+  ["👩","Beth","Online","Hi. Please don't break anything in the lab."],
+  ["👨","Jerry","Available","Hey! I was just about to send a totally normal message."],
+  ["👧","Summer","Online","What's going on? Is Rick doing something weird again?"],
+  ["👽","Birdperson","Away","Greetings. Your dimensional signal has been detected."],
+  ["🤖","Mr. Meeseeks","READY","I'm Mr. Meeseeks! Look at me!"],
+  ["🧑‍🚀","Space Beth","Online","You reached the right Beth. Probably."],
+  ["👽","Squanchy","Online","Squanch! What's happening?"],
+  ["🦎","Mr. Poopybutthole","Online","Ohhh, hi there! Have a great day!"],
+  ["👾","Unity","Connected","The network is connected. Interesting."]
+];
+
+const grid = document.getElementById("characterGrid");
+characters.forEach((c,index)=>{
+  const card=document.createElement("button");
+  card.className="character";
+  card.innerHTML=`<div class="emoji">${c[0]}</div><h3>${c[1]}</h3><p>CLICK TO VIEW PROFILE</p>`;
+  card.onclick=()=>showCharacter(c,index+1);
+  grid.appendChild(card);
+});
+
+function openRoom(id){
+  document.getElementById("homeRoom").style.display="none";
+  document.querySelectorAll(".room-screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function goHome(){
+  document.querySelectorAll(".room-screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById("homeRoom").style.display="flex";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function openFact(){
+  const i=Math.floor(Math.random()*facts.length);
+  document.getElementById("infoTag").textContent=`RANDOM FACT // ${String(i+1).padStart(2,"0")}`;
+  document.getElementById("infoTitle").textContent="INTERDIMENSIONAL FACT";
+  document.getElementById("infoBody").innerHTML=`<p>${facts[i]}</p>`;
+  document.getElementById("infoModal").classList.add("show");
+}
+function showCharacter(c,num){
+  document.getElementById("infoTag").textContent=`CHARACTER DATABASE // ${String(num).padStart(2,"0")}`;
+  document.getElementById("infoTitle").textContent=`${c[0]} ${c[1]}`;
+  document.getElementById("infoBody").innerHTML=`<p>${c[2]}</p>`;
+  document.getElementById("infoModal").classList.add("show");
+}
+function closeInfo(){document.getElementById("infoModal").classList.remove("show");}
+
+function openTravel(){
+  document.getElementById("infoTag").textContent="RICK'S LAB // PORTAL THEORY";
+  document.getElementById("infoTitle").textContent="🌀 HOW DIMENSIONAL TRAVEL WORKS";
+  document.getElementById("infoBody").innerHTML=`
+    <p>In this fictional universe, dimensional travel works by creating a controlled gateway between two points in different realities.</p>
+    <ol>
+      <li><strong>Find a destination:</strong> the portal device identifies a target reality and location.</li>
+      <li><strong>Generate the portal:</strong> the device creates a temporary opening between the two spaces.</li>
+      <li><strong>Stabilize the gateway:</strong> energy keeps the opening connected long enough for someone or something to pass through.</li>
+      <li><strong>Cross the boundary:</strong> the traveler enters the portal and emerges at the selected destination.</li>
+      <li><strong>Close the portal:</strong> once the connection is no longer needed, the gateway shuts down to prevent unwanted things from crossing.</li>
+    </ol>
+    <p style="margin-top:16px">That's the story's fictional explanation—not real-world physics. Actual interdimensional travel is not currently known to be possible.</p>
+  `;
+  document.getElementById("infoModal").classList.add("show");
+}
+
+const contactsBox=document.getElementById("contacts");
+const chat=document.getElementById("chat");
+const messages=document.getElementById("messages");
+let activeContact=null;
+
+contacts.forEach((c,index)=>{
+  const button=document.createElement("button");
+  button.className="contact";
+  button.innerHTML=`
+    <div class="avatar">${c[0]}</div>
+    <div class="contact-info">
+      <strong>${c[1]}</strong>
+      <span>${c[2]}</span>
+    </div>`;
+  button.onclick=()=>openChat(c,index);
+  contactsBox.appendChild(button);
+});
+
+function openPhone(){
+  document.getElementById("phoneModal").classList.add("show");
+  showContacts();
+}
+function showContacts(){
+  activeContact=null;
+  contactsBox.style.display="flex";
+  chat.classList.remove("show");
+}
+function openChat(c,index){
+  activeContact=c;
+  contactsBox.style.display="none";
+  chat.classList.add("show");
+  document.getElementById("chatAvatar").textContent=c[0];
+  document.getElementById("chatName").textContent=c[1];
+  messages.innerHTML="";
+  addMessage(c[3],"them");
+}
+function addMessage(text,type){
+  const div=document.createElement("div");
+  div.className=`msg ${type}`;
+  div.textContent=text;
+  messages.appendChild(div);
+  messages.scrollTop=messages.scrollHeight;
+}
+function sendMessage(){
+  const input=document.getElementById("messageInput");
+  const text=input.value.trim();
+  if(!text || !activeContact)return;
+  addMessage(text,"you");
+  input.value="";
+  setTimeout(()=>{
+    const replies=[
+      "Interesting. I'll get back to you after I finish this dimension.",
+      "Yeah, that sounds completely normal. Probably.",
+      "I received your message through the portal network.",
+      "Okay. But please don't touch anything in the lab.",
+      "That's a surprisingly reasonable question."
+    ];
+    addMessage(replies[Math.floor(Math.random()*replies.length)],"them");
+  },650);
+}
+document.getElementById("messageInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter")sendMessage();
+});
+document.getElementById("infoModal").addEventListener("click",e=>{
+  if(e.target.id==="infoModal")closeInfo();
+});
+document.getElementById("phoneModal").addEventListener("click",e=>{
+  if(e.target.id==="phoneModal")document.getElementById("phoneModal").classList.remove("show");
+});
+</script>
+</body>
+</html>
